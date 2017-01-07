@@ -56,7 +56,7 @@ LivelistChat.prototype.loadMessages = function() {
   // Loads the last 12 messages and listen for new ones.
   var setMessage = function(data) {
     var val = data.val();
-    this.displayMessage(data.key, val.name, val.text, val.photoUrl, val.imageUrl);
+    this.displayMessage(data.key, val.name, val.text, val.photoUrl, val.imageUrl, val.time);
   }.bind(this);
   this.messagesRef.limitToLast(12).on('child_added', setMessage);
   this.messagesRef.limitToLast(12).on('child_changed', setMessage);
@@ -68,10 +68,12 @@ LivelistChat.prototype.saveMessage = function(e) {
   // Check that the user entered a message and is signed in.
   if (this.messageInput.value && this.checkSignedInWithMessage()) {
     var currentUser = this.auth.currentUser;
+    var time = new Date().toLocaleTimeString();
     // Add a new message entry to the Firebase Database.
     this.messagesRef.push({
       name: currentUser.displayName,
       text: this.messageInput.value,
+      time: time,
       photoUrl: currentUser.photoURL || '/images/profile_placeholder.png'
     }).then(function() {
       // Clear message text field and SEND button state.
@@ -122,7 +124,8 @@ LivelistChat.prototype.saveImageMessage = function(event) {
     this.messagesRef.push({
       name: currentUser.displayName,
       imageUrl: LivelistChat.LOADING_IMAGE_URL,
-      photoUrl: currentUser.photoURL || '/images/profile_placeholder.png'
+      photoUrl: currentUser.photoURL || '/images/profile_placeholder.png',
+      time: currentUser.time || ''
     }).then(function(data) {
       // Upload the image to Firebase Storage.
       this.storage.ref(currentUser.uid + '/' + Date.now() + '/' + file.name)
@@ -202,7 +205,6 @@ LivelistChat.prototype.checkSignedInWithMessage = function() {
 
 // Resets the given MaterialTextField.
 LivelistChat.prototype.resetMaterialTextfield = function(element) {
-  console.log(element);
   element.value = '';
   element.parentNode.MaterialTextfield.boundUpdateClassesHandler();
 };
@@ -211,15 +213,18 @@ LivelistChat.prototype.resetMaterialTextfield = function(element) {
 LivelistChat.prototype.MESSAGE_TEMPLATE =
   '<div class="message-container">' +
     '<div class="spacing"><div class="pic"></div></div>' +
-    '<div class="message"></div>' +
-    '<div class="name"></div>' +
+    '<div class="spacing left">' +
+      '<div class="name"></div>' +
+      '<div class="message"></div>' +
+      '<div class="time"></div>' +
+    '</div>' +
   '</div>';
 
 // A loading image URL.
 LivelistChat.prototype.LOADING_IMAGE_URL = 'https://www.google.com/images/spin-32.gif';
 
 // Displays a Message in the UI.
-LivelistChat.prototype.displayMessage = function(key, name, text, picUrl, imageUri) {
+LivelistChat.prototype.displayMessage = function(key, name, text, picUrl, imageUri, time) {
   var div = document.getElementById(key);
   // If an element for that message does not exists yet we create it.
   if (!div) {
@@ -234,6 +239,10 @@ LivelistChat.prototype.displayMessage = function(key, name, text, picUrl, imageU
     div.querySelector('.pic').style.backgroundImage = 'url(' + picUrl + ')';
   }
   div.querySelector('.name').textContent = name;
+  div.querySelector('.time').textContent = time;
+  if (!time) {
+    div.querySelector('.time').style.display = 'none';
+  } 
   var messageElement = div.querySelector('.message');
   if (text) { // If the message is text.
     messageElement.textContent = text;
