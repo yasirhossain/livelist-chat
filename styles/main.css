@@ -5,6 +5,9 @@ main {
   height: 100%;
   padding-bottom: 0;
 }
+.mdl-layout__header {
+  background: #19161a;
+}
 #messages-card {
   margin-top: 15px;
 }
@@ -100,15 +103,19 @@ main {
 #message-form {
   display: flex;
   flex-direction: row;
-  width: calc(100% - 48px);
+  width: 100%;
   float: left;
-  background: #34333e;
+  background: #0f0f0f;
+  position: absolute;
+  bottom: 0;
 }
 #image-form {
   display: flex;
   flex-direction: row;
   width: 48px;
   float: right;
+  position: absolute;
+  right: 15px;
 }
 #message {
   color: #fff;
